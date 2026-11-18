@@ -351,10 +351,28 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
         <button class="btn small ghost" id="btnTestNotif">Тест уведомления</button>
       </div>
       <div class="vol-row">
-        <span>🔊 Громкость</span>
+        <span>🔊 Громкость сигналов</span>
         <input type="range" id="volRange" min="0" max="100" value="80">
         <b id="volVal">80%</b>
       </div>
+      <div class="guard-row" style="display:block">
+        <div class="gr-txt"><b>🎧 Непрерывный фоновый звук — 1%</b><span>Отдельная громкость от сигналов. Локальный файл или URL из интернета, повтор без остановки.</span></div>
+        <div class="panel-actions" style="margin-top:9px">
+          <select id="bgSourceMode" class="btn small" style="max-width:160px"><option value="url">URL из интернета</option><option value="file">Локальный файл</option></select>
+          <input id="bgUrl" type="url" placeholder="https://…/ambient.mp3" style="min-width:0;flex:1;background:var(--bg1);border:1px solid var(--line2);padding:8px;border-radius:9px;color:var(--text)">
+          <input id="bgFile" type="file" accept="audio/*" hidden>
+          <button class="btn small" id="bgChoose">Выбрать файл</button>
+          <button class="btn small" id="bgApply">Применить</button>
+          <button class="btn small" id="bgToggle">▶ Запустить</button>
+          <button class="btn small ghost" id="bgStop">⏹</button>
+        </div>
+        <div class="foot-hint" id="bgStatus">Фоновый звук выключен · громкость 1%</div>
+      </div>
+      <div class="guard-row" style="display:block">
+        <div class="gr-txt"><b>🗣️ Голосовые уведомления</b><span>Браузер произносит название напоминания и текст. Для Windows нужны системные уведомления с разрешением сайта.</span></div>
+        <label class="switch"><input type="checkbox" id="tglVoice"><i></i></label>
+      </div>
+      <div class="panel-actions"><button class="btn small" id="btnVoiceTest">Тест голоса</button></div>
       <div class="foot-hint">Для максимальной надёжности закрепите вкладку (ПКМ → «Закрепить») или установите приложение кнопкой «⬇ Установить». Настройки сохраняются автоматически.</div>
     </div>
   </section>
@@ -374,6 +392,10 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
       <button class="preset" data-preset="water">💧 Вода / 30 мин</button>
       <button class="preset" data-preset="eyes">👀 Глаза / 20 мин</button>
       <button class="preset" data-preset="walk">🚶 Прогулка / 90 мин</button>
+    </div>
+    <div class="panel" style="margin-bottom:16px">
+      <h2>📚 Сохранённые шаблоны</h2><div class="hint">Шаблоны хранятся отдельно и остаются после перезагрузки. Сохраняйте шаблон из редактора напоминания.</div>
+      <div class="panel-actions" id="templateList"><span class="foot-hint">Пока нет шаблонов</span></div>
     </div>
     <div class="grid" id="grid"></div>
   </section>
@@ -434,6 +456,7 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
     <div class="f-row"><label>Текст уведомления</label><textarea id="edText" maxlength="200"></textarea></div>
     <div class="f-enabled"><label class="switch"><input type="checkbox" id="edEnabled" checked><i></i></label> Включено</div>
     <div class="modal-actions">
+      <button class="btn small" id="edSaveTemplate">☆ В шаблон</button>
       <button class="btn danger small" id="edDelete">Удалить</button>
       <div class="spacer"></div>
       <button class="btn ghost" id="edCancel">Отмена</button>
@@ -571,7 +594,7 @@ function load(){
 var state=load();
 var nextMap={};
 var persistTimer=null;
-function persist(){clearTimeout(persistTimer);persistTimer=setTimeout(function(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}},120);}
+function persist(){clearTimeout(persistTimer);persistTimer=setTimeout(function(){persistNow();},80);}
 function persistNow(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 
 /* ============================== ЗВУК ============================== */
@@ -606,7 +629,12 @@ var SOUNDS={
   pulse:{label:'Пульс',fn:function(c,o,t){tone(c,o,t,440,0.12,'square',0.22);tone(c,o,t+0.2,440,0.12,'square',0.22);tone(c,o,t+0.4,660,0.16,'square',0.22);}},
   sweep:{label:'Взлёт',fn:function(c,o,t){tone(c,o,t,300,0.55,'sine',0.4,950);}},
   knock:{label:'Тук-тук',fn:function(c,o,t){knock(c,o,t);knock(c,o,t+0.18);knock(c,o,t+0.36);}},
-  calm:{label:'Спокойный',fn:function(c,o,t){tone(c,o,t,392,1.4,'sine',0.35);tone(c,o,t+0.25,523,1.4,'sine',0.3);}}
+  calm:{label:'Спокойный',fn:function(c,o,t){tone(c,o,t,392,1.4,'sine',0.35);tone(c,o,t+0.25,523,1.4,'sine',0.3);}},
+  soft:{label:'Мягкий аккорд',fn:function(c,o,t){[440,554,659].forEach(function(f,i){tone(c,o,t+i*.1,f,1.1,'sine',.3);});}},
+  double:{label:'Двойной сигнал',fn:function(c,o,t){tone(c,o,t,880,.22,'triangle',.45);tone(c,o,t+.32,1175,.35,'triangle',.45);}},
+  water:{label:'Капли',fn:function(c,o,t){[1046,1318,1568].forEach(function(f,i){tone(c,o,t+i*.24,f,.18,'sine',.35);});}},
+  birds:{label:'Высокие ноты',fn:function(c,o,t){[1500,1800,1400,2000].forEach(function(f,i){tone(c,o,t+i*.14,f,.22,'sine',.2);});}},
+  low:{label:'Низкий мягкий',fn:function(c,o,t){tone(c,o,t,220,.5,'sine',.45);tone(c,o,t+.2,330,.6,'sine',.3);}}
 };
 function playSound(id){
   if(!state.settings.soundOn)return;
@@ -620,7 +648,7 @@ function startKeepAlive(){
   var ctx=ensureAudio();if(!ctx||ctx.state!=='running')return;
   try{
     keepOsc=ctx.createOscillator();keepOsc.type='sine';keepOsc.frequency.value=40;
-    keepGain=ctx.createGain();keepGain.gain.value=0.015;
+    keepGain=ctx.createGain();keepGain.gain.value=0.01;
     keepOsc.connect(keepGain);keepGain.connect(ctx.destination);
     if(ctx.createMediaStreamDestination){
       var dest=ctx.createMediaStreamDestination();keepGain.connect(dest);
@@ -671,7 +699,7 @@ var ICON=makeIcon(192);
 function notifPermission(){return('Notification' in window)?Notification.permission:'unsupported';}
 function showNotif(title,body,tag){
   if(notifPermission()!=='granted')return;
-  var opts={body:body,icon:ICON,badge:ICON,tag:tag||'perekur-plus',renotify:true};
+  var opts={body:body,icon:ICON,badge:ICON,tag:tag||'perekur-plus',renotify:true,requireInteraction:false,silent:false};
   try{
     if(swReg&&swReg.showNotification){swReg.showNotification(title,opts).catch(function(){try{new Notification(title,opts);}catch(e){}});}
     else new Notification(title,opts);
@@ -687,7 +715,8 @@ function updateNotifButtons(){
 }
 function askNotif(){
   var p=notifPermission();
-  if(p==='unsupported'){toast('Этот браузер не поддерживает системные уведомления','err');return;}
+  if(p==='unsupported'){toast('Системные уведомления недоступны в этом браузере','err');return;}
+  if(!window.isSecureContext){toast('Для Windows-уведомлений откройте страницу через HTTPS или localhost (file:// не поддерживает полноценные уведомления)','err');}
   if(p==='granted'){showNotif('Перекур+','Уведомления работают отлично ✅','perm-test');toast('Уведомления уже разрешены','ok');return;}
   if(p==='denied'){toast('Откройте настройки сайта (замок в адресной строке) → Уведомления → Разрешить','err');return;}
   Notification.requestPermission().then(function(){updateNotifButtons();if(Notification.permission==='granted'){showNotif('Перекур+','Уведомления включены! Сигналы будут приходить сюда.','perm');toast('Уведомления разрешены','ok');}});
@@ -737,6 +766,7 @@ function fire(r,lateMs){
   pushHistory(entry);
   alertQueue.push({r:r,entryId:entry.id,lateMs:lateMs});
   playSound(r.sound);
+  speakReminder(r);
   var lateNote=lateMs>90000?' (сигнал опоздал на '+fmtDur(lateMs)+' — вкладка спала)':'';
   showNotif(r.emoji+' '+r.name,r.text+lateNote,'perekur-'+r.id);
   if(!currentAlert)showNextAlert();
@@ -1109,6 +1139,37 @@ if(navigator.storage&&navigator.storage.persist){
   }).catch(function(){setChip('chipStore','','Хранилище: localStorage');});
 }else setChip('chipStore','','Хранилище: localStorage');
 
+/* ============================== ШАБЛОНЫ / ФОН / РЕЧЬ ============================== */
+var TEMPLATE_KEY='perekur.plus.templates.v1';
+function readTemplates(){try{return JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]');}catch(e){return[];}}
+function saveTemplates(list){try{localStorage.setItem(TEMPLATE_KEY,JSON.stringify(list));}catch(e){toast('Не удалось сохранить шаблоны: хранилище недоступно','err');}}
+function templateDataFromEditor(){return {name:$('edName').value.trim(),emoji:edEmoji,color:edColor,mode:$('edMode').value,intervalMinutes:+$('edInterval').value,hourlyMinute:+$('edHourly').value,dailyTime:$('edDaily').value,rangeStart:$('edStart').value,rangeEnd:$('edEnd').value,days:edDays.slice(),sound:$('edSound').value,text:$('edText').value.trim(),enabled:$('edEnabled').checked};}
+function renderTemplates(){var list=readTemplates(),box=$('templateList');box.innerHTML='';if(!list.length){box.innerHTML='<span class="foot-hint">Пока нет шаблонов — откройте напоминание и нажмите «☆ В шаблон».</span>';return;}list.forEach(function(t,i){var b=document.createElement('button');b.className='btn small';b.textContent='＋ '+t.name;b.title='Добавить шаблон';b.onclick=function(){var data=Object.assign({},t.data,{preset:null,snoozeUntil:0});state.reminders.push(normalizeReminder(Object.assign({id:uid()},data)));persistNow();renderCards();recomputeAll();toast('Шаблон добавлен: '+t.name,'ok');};var del=document.createElement('button');del.className='btn small danger';del.textContent='×';del.title='Удалить шаблон';del.onclick=function(){var fresh=readTemplates();fresh.splice(i,1);saveTemplates(fresh);renderTemplates();};box.appendChild(b);box.appendChild(del);});}
+$('edSaveTemplate').onclick=function(){var data=templateDataFromEditor();if(!data.name){toast('Введите название шаблона','err');return;}var list=readTemplates();list.push({id:uid(),name:data.name,data:data,savedAt:Date.now()});saveTemplates(list);renderTemplates();toast('Шаблон сохранён в браузере','ok');};
+var bgAudio=new Audio();bgAudio.loop=true;bgAudio.preload='auto';bgAudio.volume=.01;
+var bgFileObjectUrl=null,bgAudioDb=null,bgGain=null,bgSourceNode=null;
+var BGKEY='perekur.plus.background.v1';
+function bgFileDB(){return new Promise(function(resolve,reject){var req=indexedDB.open('perekur-plus-audio',1);req.onupgradeneeded=function(){req.result.createObjectStore('audio');};req.onsuccess=function(){resolve(req.result);};req.onerror=function(){reject(req.error);};});}
+function bgStoreFile(file){return bgFileDB().then(function(db){return new Promise(function(resolve,reject){var tx=db.transaction('audio','readwrite');tx.objectStore('audio').put(file,'background');tx.oncomplete=function(){db.close();resolve();};tx.onerror=function(){db.close();reject(tx.error);};});});}
+function bgGetFile(){return bgFileDB().then(function(db){return new Promise(function(resolve,reject){var tx=db.transaction('audio','readonly'),req=tx.objectStore('audio').get('background');req.onsuccess=function(){db.close();resolve(req.result||null);};req.onerror=function(){db.close();reject(req.error);};});});}
+function bgLoadConfig(){try{return JSON.parse(localStorage.getItem(BGKEY)||'{}');}catch(e){return{};}}
+function bgSaveConfig(c){try{localStorage.setItem(BGKEY,JSON.stringify(c));}catch(e){}}
+function bgStatus(msg){$('bgStatus').textContent=msg+' · громкость 1%';}
+function bgSetUrl(url){if(!url)return;bgAudio.src=url;bgAudio.volume=.01;bgAudio.load();}
+function bgApply(){var mode=$('bgSourceMode').value;if(mode==='url'){var url=$('bgUrl').value.trim();if(!/^https?:\/\//i.test(url)){toast('Введите полный http/https URL аудиофайла','err');return;}bgSetUrl(url);bgSaveConfig({mode:'url',url:url});bgStatus('URL выбран');toast('Фоновый источник применён','ok');}else{$('bgFile').click();}}
+$('bgSourceMode').onchange=function(){var isFile=this.value==='file';$('bgUrl').hidden=isFile;$('bgChoose').hidden=!isFile;};
+$('bgChoose').onclick=function(){$('bgFile').click();};
+$('bgApply').onclick=bgApply;
+$('bgFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;if(bgFileObjectUrl)URL.revokeObjectURL(bgFileObjectUrl);bgFileObjectUrl=URL.createObjectURL(f);bgSetUrl(bgFileObjectUrl);bgSaveConfig({mode:'file',fileName:f.name});bgStoreFile(f).then(function(){bgStatus('Локальный файл сохранён и будет доступен после перезагрузки: '+f.name);toast('Файл сохранён локально','ok');}).catch(function(){bgStatus('Файл подключён, но не удалось сохранить его в IndexedDB');toast('Файл воспроизводится, но не сохранён в хранилище','err');});};
+$('bgToggle').onclick=function(){if(!bgAudio.src){toast('Сначала выберите URL или локальный файл','err');return;}bgAudio.volume=.01;bgAudio.play().then(function(){$('bgToggle').textContent='⏸ Пауза';bgStatus('Фоновый звук играет непрерывно');}).catch(function(){toast('Не удалось воспроизвести: нажмите ещё раз или проверьте URL','err');});};
+$('bgStop').onclick=function(){bgAudio.pause();$('bgToggle').textContent='▶ Запустить';bgStatus('Фоновый звук остановлен');};
+bgAudio.addEventListener('play',function(){$('bgToggle').textContent='⏸ Пауза';});bgAudio.addEventListener('pause',function(){$('bgToggle').textContent='▶ Запустить';});bgAudio.addEventListener('error',function(){bgStatus('Ошибка загрузки аудио — проверьте URL / CORS');});
+var bgCfg=bgLoadConfig();if(bgCfg.mode==='url'&&bgCfg.url){$('bgSourceMode').value='url';$('bgUrl').value=bgCfg.url;bgSetUrl(bgCfg.url);}else if(bgCfg.mode==='file'){$('bgSourceMode').value='file';$('bgUrl').hidden=true;$('bgChoose').hidden=false;bgGetFile().then(function(f){if(f){bgFileObjectUrl=URL.createObjectURL(f);bgSetUrl(bgFileObjectUrl);bgStatus('Локальный аудиофайл восстановлен: '+(bgCfg.fileName||f.name||'audio'));}else bgStatus('Локальный файл не найден — выберите его заново');}).catch(function(){bgStatus('Локальный файл недоступен — выберите его заново');});}
+var voiceEnabled=localStorage.getItem('perekur.plus.voice')==='1';$('tglVoice').checked=voiceEnabled;
+$('tglVoice').onchange=function(){voiceEnabled=this.checked;localStorage.setItem('perekur.plus.voice',voiceEnabled?'1':'0');};
+function speakReminder(r){if(!voiceEnabled||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(r.name+'. '+r.text);u.lang='ru-RU';u.rate=1;u.volume=1;speechSynthesis.speak(u);}catch(e){}}
+$('btnVoiceTest').onclick=function(){if(!('speechSynthesis' in window)){toast('Голосовой синтез не поддерживается','err');return;}var u=new SpeechSynthesisUtterance('Перекур плюс. Голосовые уведомления работают.');u.lang='ru-RU';speechSynthesis.speak(u);};
+
 /* ============================== ПАНЕЛЬ / ШАПКА ============================== */
 $('tglKeep').checked=state.settings.keepAwake;
 $('tglWake').checked=state.settings.wakeLock;
@@ -1240,6 +1301,7 @@ document.addEventListener('visibilitychange',function(){
 window.addEventListener('focus',function(){tick(Date.now());});
 window.addEventListener('pageshow',function(){tick(Date.now());});
 window.addEventListener('beforeunload',persistNow);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')persistNow();});
 var errShown=false;
 window.addEventListener('error',function(){
   if(!errShown){errShown=true;toast('Произошла ошибка скрипта — перезагрузите страницу, если что-то не работает','err');}
@@ -1259,6 +1321,7 @@ document.querySelectorAll('[data-nav]').forEach(function(s){navIo.observe(s);});
 
 /* ============================== СТАРТ ============================== */
 buildEditorStatics();
+renderTemplates();
 renderCards();
 renderHistory();
 syncSoundBtn();
