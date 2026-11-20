@@ -121,7 +121,7 @@ section{scroll-margin-top:86px}
 .chip.bad{color:#ffc9c9}
 .chip.wait .dot{background:var(--warn);box-shadow:0 0 6px var(--warn)}
 .chip.wait{color:#ffe6b3}
-.panel-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.panel-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}.panel-actions>*{min-width:0;max-width:100%}
 .btn{border:1px solid var(--line2);background:var(--surface2);color:var(--text);border-radius:11px;padding:9px 14px;font-size:13px;font-weight:700;transition:.2s}
 .btn:hover{border-color:var(--amber);transform:translateY(-1px)}
 .btn.primary{background:var(--grad);color:#2a1408;border:none;box-shadow:0 8px 22px rgba(255,140,60,.3)}
@@ -134,6 +134,46 @@ input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:6px;bord
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:#fff7ee;border:3px solid var(--coral);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff7ee;border:3px solid var(--coral);cursor:pointer}
 .panel .foot-hint{margin-top:12px;font-size:11.5px;color:var(--dim);border-top:1px dashed var(--line);padding-top:10px}
+
+
+/* ---------- меню настроек ---------- */
+.hero{grid-template-columns:1fr}
+.settings-back{z-index:85;overflow-y:auto;place-items:start center;padding:clamp(10px,3vh,28px) 14px}
+.settings-modal{width:min(780px,100%);max-height:calc(100vh - 36px);overflow-y:auto;background:linear-gradient(170deg,var(--surface2),var(--bg1));border:1px solid var(--line2);border-radius:22px;padding:clamp(14px,2.5vw,24px);box-shadow:var(--shadow)}
+.settings-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.settings-head h2{font-family:var(--disp);font-size:16px;flex:1;min-width:0}
+.settings-panel{padding:clamp(14px,2.2vw,22px);box-shadow:none}
+.settings-panel .panel-actions{min-width:0}
+.settings-panel .panel-actions>*{max-width:100%;min-width:0}
+.settings-panel .guard-row{flex-wrap:wrap}
+.settings-panel .guard-row .gr-txt{overflow-wrap:anywhere}
+.settings-panel .vol-row{flex-wrap:wrap}
+.settings-panel .vol-row input[type=range]{min-width:100px}
+.settings-panel .guard-row[style*="display:block"] .panel-actions{display:flex;flex-wrap:wrap}
+.settings-panel .guard-row[style*="display:block"] .panel-actions input[type=url]{width:100%;flex:1 1 180px}
+.settings-panel .guard-row[style*="display:block"] .panel-actions button,
+.settings-panel .guard-row[style*="display:block"] .panel-actions select{flex:0 1 auto}
+.settings-select{width:100%;background:var(--bg1);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;color:var(--text);color-scheme:dark}
+.voice-controls{margin-top:12px}
+.voice-controls label b{float:right;color:var(--amber);font-variant-numeric:tabular-nums}
+.voice-note{font-size:11.5px;color:var(--dim);margin-top:6px}
+@media(max-width:400px){
+  .topbar{gap:5px;padding:8px}
+  .brand{gap:6px}
+  .brand .cup{width:32px;height:32px;font-size:17px}
+  .brand b{font-size:13px}
+  .topbar .icon-btn{width:32px;height:32px;border-radius:10px;font-size:15px}
+  .next-pill{gap:5px;padding:6px 8px;font-size:11px}
+  .next-pill .np-time{font-size:10px}
+}
+@media(max-width:640px){
+  .settings-back{padding:8px}
+  .settings-modal{max-height:calc(100vh - 16px);padding:12px;border-radius:16px}
+  .settings-panel{padding:12px}
+  .settings-panel .panel-actions .btn{flex:1 1 auto}
+  .settings-panel .vol-row{align-items:center}
+  .settings-panel .vol-row span{width:100%}
+}
 
 /* ---------- секции ---------- */
 .sec-head{display:flex;align-items:center;gap:14px;margin:0 0 16px}
@@ -292,6 +332,7 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
   </button>
   <button class="icon-btn" id="btnSound" title="Звук сигналов: вкл/выкл">🔊</button>
   <button class="icon-btn" id="btnNotif" title="Системные уведомления">🔔</button>
+  <button class="icon-btn" id="btnSettings" title="Настройки" aria-label="Открыть настройки">⚙</button>
   <button class="icon-btn" id="btnPause" title="Пауза всех напоминаний">⏸</button>
   <button class="install-btn" id="btnInstall" hidden>⬇ <span>Установить</span></button>
 </header>
@@ -324,7 +365,13 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
       </div>
     </div>
 
-    <div class="panel reveal in">
+    <div class="modal-back settings-back" id="settingsBack" hidden>
+      <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="settings-head">
+          <h2 id="settingsTitle">⚙ Настройки «Перекур+»</h2>
+          <button class="icon-btn" id="btnSettingsClose" type="button" aria-label="Закрыть настройки">✕</button>
+        </div>
+        <div class="panel settings-panel">
       <h2>🛡️ Работа в фоне</h2>
       <div class="hint">Бразер усыляет вкладки и глушит таймеры. Эти механизмы не дают «Перекуру+» заснуть.</div>
       <div class="guard-row">
@@ -372,8 +419,29 @@ footer .note{font-size:11.5px;color:var(--dim);width:100%;margin-top:6px}
         <div class="gr-txt"><b>🗣️ Голосовые уведомления</b><span>Браузер произносит название напоминания и текст. Для Windows нужны системные уведомления с разрешением сайта.</span></div>
         <label class="switch"><input type="checkbox" id="tglVoice"><i></i></label>
       </div>
+      <div class="f-row voice-controls">
+        <label for="voiceProfile">Женский голос / подача</label>
+        <select id="voiceProfile" class="settings-select">
+          <option value="soft">Алиса · мягкий</option>
+          <option value="clear">Анна · чёткий</option>
+          <option value="warm">Мария · тёплый</option>
+          <option value="bright">Ева · звонкий</option>
+          <option value="calm">София · спокойный</option>
+        </select>
+        <div class="voice-note" id="voiceAvailability">Варианты используют установленный женский русский голос браузера с разной подачей.</div>
+      </div>
+      <div class="f-row voice-controls">
+        <label for="voiceRate">Скорость произношения <b id="voiceRateVal">1.0×</b></label>
+        <input type="range" id="voiceRate" min="0.6" max="1.6" step="0.05" value="1">
+      </div>
+      <div class="f-row voice-controls">
+        <label for="voiceNative">Системный голос (если доступен)</label>
+        <select id="voiceNative" class="settings-select"><option value="">Автоматический женский русский</option></select>
+      </div>
       <div class="panel-actions"><button class="btn small" id="btnVoiceTest">Тест голоса</button></div>
       <div class="foot-hint">Для максимальной надёжности закрепите вкладку (ПКМ → «Закрепить») или установите приложение кнопкой «⬇ Установить». Настройки сохраняются автоматически.</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -558,7 +626,8 @@ function mk(id,name,emoji,color,over){
 }
 function seed(){return{
   v:3,
-  settings:{soundOn:true,volume:0.8,keepAwake:true,wakeLock:true,catchUp:true,paused:false},
+  settings:{soundOn:true,volume:0.8,keepAwake:true,wakeLock:true,catchUp:true,paused:false,
+    voiceEnabled:false,voiceProfile:'soft',voiceRate:1,voiceName:''},
   reminders:[
     mk('r-smoke','Перекур','☕','#ffb054',{mode:'hourly',hourlyMinute:55,sound:'chimes',text:'Пора сделать перекур! Оторвитесь от экрана на пару минут.',preset:'smoke'}),
     mk('r-lunch','Обед','🍱','#ff6a5c',{mode:'daily',dailyTime:'13:00',sound:'marimba',text:'Время обеда! Поешьте спокойно, без экрана.',preset:'lunch'}),
@@ -580,22 +649,46 @@ function normalizeReminder(x){
   return r;
 }
 function load(){
+  var s=seed(),raw=null;
+  try{raw=localStorage.getItem(LS);}catch(e){}
+  if(!raw){try{raw=localStorage.getItem(LS+'.backup');}catch(e){}}
+  if(!raw)return s;
   try{
-    var raw=localStorage.getItem(LS);if(!raw)return seed();
-    var p=JSON.parse(raw);if(!p||!Array.isArray(p.reminders))return seed();
-    var s=seed();
+    var p=JSON.parse(raw);if(!p||!Array.isArray(p.reminders))throw new Error('invalid settings');
     p.settings=Object.assign(s.settings,p.settings||{});
-    p.settings.volume=clamp(+p.settings.volume||0.8,0,1);
+    try{if(localStorage.getItem('perekur.plus.voice')==='1')p.settings.voiceEnabled=true;localStorage.removeItem('perekur.plus.voice');}catch(e){}
+    p.settings.volume=clamp(Number.isFinite(+p.settings.volume)?+p.settings.volume:0.8,0,1);
+    p.settings.voiceRate=clamp(Number(p.settings.voiceRate)||1,0.6,1.6);
+    if(['soft','clear','warm','bright','calm'].indexOf(p.settings.voiceProfile)<0)p.settings.voiceProfile='soft';
+    p.settings.voiceEnabled=!!p.settings.voiceEnabled;
+    p.settings.voiceName=String(p.settings.voiceName||'');
     p.reminders=p.reminders.map(normalizeReminder);
     p.history=Array.isArray(p.history)?p.history.slice(0,60):[];
     return p;
-  }catch(e){return seed();}
+  }catch(e){
+    try{
+      var backup=localStorage.getItem(LS+'.backup');
+      if(backup){var q=JSON.parse(backup);if(q&&Array.isArray(q.reminders)){q.settings=Object.assign(s.settings,q.settings||{});q.reminders=q.reminders.map(normalizeReminder);q.history=Array.isArray(q.history)?q.history.slice(0,60):[];return q;}}
+    }catch(ignore){}
+    return s;
+  }
 }
 var state=load();
 var nextMap={};
 var persistTimer=null;
 function persist(){clearTimeout(persistTimer);persistTimer=setTimeout(function(){persistNow();},80);}
-function persistNow(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
+function persistNow(){
+  try{
+    var snapshot=JSON.stringify(state);
+    localStorage.setItem(LS,snapshot);
+    /* Резервная копия защищает от повреждения основного значения */
+    localStorage.setItem(LS+'.backup',snapshot);
+    return true;
+  }catch(e){
+    try{if(typeof toast==='function')toast('Браузер запретил сохранение. Проверьте режим инкогнито и настройки хранилища сайта.','err');}catch(ignore){}
+    return false;
+  }
+}
 
 /* ============================== ЗВУК ============================== */
 var audioCtx=null,keepOsc=null,keepGain=null,keepEl=null,audioUnlocked=false;
@@ -1165,10 +1258,75 @@ $('bgToggle').onclick=function(){if(!bgAudio.src){toast('Сначала выбе
 $('bgStop').onclick=function(){bgAudio.pause();$('bgToggle').textContent='▶ Запустить';bgStatus('Фоновый звук остановлен');};
 bgAudio.addEventListener('play',function(){$('bgToggle').textContent='⏸ Пауза';});bgAudio.addEventListener('pause',function(){$('bgToggle').textContent='▶ Запустить';});bgAudio.addEventListener('error',function(){bgStatus('Ошибка загрузки аудио — проверьте URL / CORS');});
 var bgCfg=bgLoadConfig();if(bgCfg.mode==='url'&&bgCfg.url){$('bgSourceMode').value='url';$('bgUrl').value=bgCfg.url;bgSetUrl(bgCfg.url);}else if(bgCfg.mode==='file'){$('bgSourceMode').value='file';$('bgUrl').hidden=true;$('bgChoose').hidden=false;bgGetFile().then(function(f){if(f){bgFileObjectUrl=URL.createObjectURL(f);bgSetUrl(bgFileObjectUrl);bgStatus('Локальный аудиофайл восстановлен: '+(bgCfg.fileName||f.name||'audio'));}else bgStatus('Локальный файл не найден — выберите его заново');}).catch(function(){bgStatus('Локальный файл недоступен — выберите его заново');});}
-var voiceEnabled=localStorage.getItem('perekur.plus.voice')==='1';$('tglVoice').checked=voiceEnabled;
-$('tglVoice').onchange=function(){voiceEnabled=this.checked;localStorage.setItem('perekur.plus.voice',voiceEnabled?'1':'0');};
-function speakReminder(r){if(!voiceEnabled||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(r.name+'. '+r.text);u.lang='ru-RU';u.rate=1;u.volume=1;speechSynthesis.speak(u);}catch(e){}}
-$('btnVoiceTest').onclick=function(){if(!('speechSynthesis' in window)){toast('Голосовой синтез не поддерживается','err');return;}var u=new SpeechSynthesisUtterance('Перекур плюс. Голосовые уведомления работают.');u.lang='ru-RU';speechSynthesis.speak(u);};
+var voiceEnabled=!!state.settings.voiceEnabled;
+var voiceProfiles={
+  soft:{label:'Алиса · мягкий',pitch:1.12,rate:0.96},
+  clear:{label:'Анна · чёткий',pitch:1.02,rate:1.08},
+  warm:{label:'Мария · тёплый',pitch:0.92,rate:0.94},
+  bright:{label:'Ева · звонкий',pitch:1.28,rate:1.04},
+  calm:{label:'София · спокойный',pitch:0.84,rate:0.88}
+};
+var availableFemaleVoices=[];
+function refreshVoiceList(){
+  if(!('speechSynthesis' in window))return;
+  var voices=speechSynthesis.getVoices()||[];
+  var ru=voices.filter(function(v){return /^ru([_-]|$)/i.test(v.lang||'');});
+  availableFemaleVoices=ru.filter(function(v){return /female|woman|алиса|ирина|мария|светлана|дарья|елена|оксана|юлия|anna|irina|milena|svetlana|tatiana|katya|google русский/i.test(v.name||'');});
+  if(!availableFemaleVoices.length)availableFemaleVoices=ru;
+  var sel=$('voiceNative'),keep=state.settings.voiceName;
+  sel.innerHTML='<option value="">Автоматический женский русский</option>';
+  availableFemaleVoices.forEach(function(v){
+    var o=document.createElement('option');o.value=v.name;o.textContent=v.name+' · '+v.lang;sel.appendChild(o);
+  });
+  if(keep&&availableFemaleVoices.some(function(v){return v.name===keep;}))sel.value=keep;
+  $('voiceAvailability').textContent=availableFemaleVoices.length
+    ? 'Найдено системных русских голосов: '+availableFemaleVoices.length+'. Пять вариантов выше меняют тембр и манеру речи установленного голоса.'
+    : 'Русский женский голос не найден. Браузер использует голос по умолчанию; установите дополнительные голоса русского языка в системе.';
+}
+if('speechSynthesis' in window){
+  refreshVoiceList();
+  speechSynthesis.onvoiceschanged=refreshVoiceList;
+}
+$('tglVoice').checked=voiceEnabled;
+$('voiceProfile').value=state.settings.voiceProfile||'soft';
+$('voiceRate').value=state.settings.voiceRate||1;
+$('voiceRateVal').textContent=(+(state.settings.voiceRate||1)).toFixed(2)+'×';
+$('voiceNative').value=state.settings.voiceName||'';
+$('tglVoice').onchange=function(){voiceEnabled=this.checked;state.settings.voiceEnabled=voiceEnabled;persist();};
+$('voiceProfile').onchange=function(){state.settings.voiceProfile=this.value;persist();};
+$('voiceRate').oninput=function(){state.settings.voiceRate=+this.value;$('voiceRateVal').textContent=state.settings.voiceRate.toFixed(2)+'×';persist();};
+$('voiceNative').onchange=function(){state.settings.voiceName=this.value;persist();};
+function speakText(text){
+  if(!('speechSynthesis' in window)){toast('Голосовой синтез не поддерживается','err');return;}
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text),profile=voiceProfiles[state.settings.voiceProfile]||voiceProfiles.soft;
+    var chosen=availableFemaleVoices.find(function(v){return v.name===state.settings.voiceName;})||
+      availableFemaleVoices[0]||null;
+    if(chosen){u.voice=chosen;u.lang=chosen.lang||'ru-RU';}else u.lang='ru-RU';
+    u.rate=clamp((+state.settings.voiceRate||1)*profile.rate,0.6,1.6);
+    u.pitch=profile.pitch;u.volume=1;
+    speechSynthesis.speak(u);
+  }catch(e){toast('Не удалось запустить голосовое уведомление','err');}
+}
+function speakReminder(r){if(!voiceEnabled)return;speakText(r.name+'. '+r.text);}
+$('btnVoiceTest').onclick=function(){speakText('Перекур плюс. Голосовые уведомления работают. Это проверка выбранного женского голоса и скорости произношения.');};
+
+/* ============================== МЕНЮ НАСТРОЕК ============================== */
+function openSettings(){
+  $('settingsBack').hidden=false;
+  document.body.style.overflow='hidden';
+  setTimeout(function(){$('btnSettingsClose').focus();},20);
+}
+function closeSettings(){
+  $('settingsBack').hidden=true;
+  document.body.style.overflow='';
+  $('btnSettings').focus();
+}
+$('btnSettings').onclick=openSettings;
+$('btnSettingsClose').onclick=closeSettings;
+$('settingsBack').addEventListener('click',function(e){if(e.target===$('settingsBack'))closeSettings();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('settingsBack').hidden)closeSettings();});
 
 /* ============================== ПАНЕЛЬ / ШАПКА ============================== */
 $('tglKeep').checked=state.settings.keepAwake;
@@ -1265,6 +1423,12 @@ function syncAllControls(){
   $('tglCatch').checked=state.settings.catchUp;
   $('volRange').value=Math.round(state.settings.volume*100);
   $('volVal').textContent=Math.round(state.settings.volume*100)+'%';
+  voiceEnabled=!!state.settings.voiceEnabled;
+  $('tglVoice').checked=voiceEnabled;
+  $('voiceProfile').value=state.settings.voiceProfile||'soft';
+  $('voiceRate').value=state.settings.voiceRate||1;
+  $('voiceRateVal').textContent=(+(state.settings.voiceRate||1)).toFixed(2)+'×';
+  $('voiceNative').value=state.settings.voiceName||'';
   syncSoundBtn();syncPauseBtn();
   if(state.settings.keepAwake)startKeepAlive();else stopKeepAlive();
   if(state.settings.wakeLock)requestWake();else releaseWake();
@@ -1301,6 +1465,18 @@ document.addEventListener('visibilitychange',function(){
 window.addEventListener('focus',function(){tick(Date.now());});
 window.addEventListener('pageshow',function(){tick(Date.now());});
 window.addEventListener('beforeunload',persistNow);
+window.addEventListener('pagehide',persistNow);
+window.addEventListener('storage',function(e){
+  if(e.key===LS&&e.newValue){
+    try{
+      var incoming=JSON.parse(e.newValue);
+      if(incoming&&Array.isArray(incoming.reminders)){
+        /* Не перетираем активную сессию автоматически — уведомляем о другой вкладке */
+        toast('Настройки изменены в другой вкладке. Перезагрузите страницу, чтобы загрузить их.','err');
+      }
+    }catch(ignore){}
+  }
+});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')persistNow();});
 var errShown=false;
 window.addEventListener('error',function(){
@@ -1326,6 +1502,7 @@ renderCards();
 renderHistory();
 syncSoundBtn();
 syncPauseBtn();
+persistNow();
 updateNotifButtons();
 recomputeAll();
 updateChips();
